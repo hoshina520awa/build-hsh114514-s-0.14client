@@ -5,21 +5,26 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
+
+      # 阶段 1：用 JDK 17 装 SDK / NDK
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install NDK
+        run: echo "y" | sdkmanager "ndk;21.4.7075529"
+
+      # 阶段 2：切回 JDK 11 跑老 Gradle
       - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '11'
-      - uses: android-actions/setup-android@v4
-        env:
-          SKIP_JDK_VERSION_CHECK: '1'
-      - name: Install NDK
-        env:
-          SKIP_JDK_VERSION_CHECK: '1'
-        run: echo "y" | sdkmanager "ndk;21.4.7075529"
       - name: Build
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --stacktrace
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
