@@ -2,21 +2,26 @@ name: Build DemoClient
 on: workflow_dispatch
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '11'
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
+        env:
+          SKIP_JDK_VERSION_CHECK: '1'
       - name: Install NDK
+        env:
+          SKIP_JDK_VERSION_CHECK: '1'
         run: echo "y" | sdkmanager "ndk;21.4.7075529"
       - name: Build
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: democlient-apk
           path: app/build/outputs/apk/debug/*.apk
