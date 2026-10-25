@@ -1,0 +1,500 @@
+/********************************************************
++*   (c) Mojang. All rights reserved                       *
++*   (c) Microsoft. All rights reserved.                   *
++*********************************************************/
+
+{
+  "namespace": "invite",
+
+  //Thin Border button with a variable text
+  "button_label": {
+    "type": "label",
+    "text": "$button_text",
+    "layer": 1,
+    "color": [ 0, 0, 0 ]
+  },
+
+  "bound_button_label@button_label": {
+    "text": "$label_bind_name",
+    "bindings": [
+      {
+        "binding_name": "$label_bind_name",
+        "binding_type": "global"
+      }
+    ]
+  },
+
+  "default_borderless_button_layout": {
+    "variables": [
+      {
+        "requires": "$label_bind_name",
+        "$label_to_use": "bound_button_label"
+      }
+    ],
+    "type": "image",
+    "nineslice_size": 1,
+    "texture": "gui/newgui/buttons/borderless/base.png",
+    "uv": [ 0, 0 ],
+    "uv_size": [ 5, 5 ],
+    "controls": [
+      { "@invite.$label_to_use": { } }
+    ]
+  },
+
+  "hover_borderless_button_layout@default_borderless_button_layout": {
+    "texture": "gui/newgui/buttons/borderless/hover.png"
+  },
+
+  "pressed_borderless_button_layout@default_borderless_button_layout": {
+    "texture": "gui/newgui/buttons/borderless/hoverpress.png",
+    "controls": [
+      { "@invite.$label_to_use": { "offset": [ 1, 1 ] } }
+    ]
+  },
+
+  "borderless_button@common.button": {
+    "$label_to_use|default": "button_label",
+    "$label_bind_name|default": "",
+    "controls": [
+      {
+        "default@default_borderless_button_layout": { }
+      },
+      {
+        "hover@hover_borderless_button_layout": { }
+      },
+      {
+        "pressed@pressed_borderless_button_layout": { }
+      }
+    ]
+  },
+
+
+  //Black bordered box is used for the grid item and around the gamerpic
+  "black_border": {
+    "type": "image",
+    "texture": "gui/newgui/MainBanners.png",
+    "uv": [ 0, 0 ],
+    "uv_size": [ 3, 3 ],
+    "nineslice_size": 1.0
+  },
+
+  "black_border_hover@black_border": {
+    "texture": "gui/newgui/MainBannersHover.png"
+  },
+
+  //Gamerpic uses the black border and an image that will come from XBL
+  "gamerpic": {
+    "type": "image",
+    "texture": "#texture",
+    "uv": [ 0, 0 ],
+    "uv_size": [ 64, 64 ],
+    "texture_source": "#texture_source",
+    "bindings": [
+      {
+        "binding_name": "#texture",
+        "binding_type": "collection",
+        "binding_collection_name": "friends"
+      },
+      {
+        "binding_name": "#texture_source",
+        "binding_type": "collection",
+        "binding_collection_name": "friends"
+      }
+
+    ]
+  },
+
+  "gamerpic_panel": {
+    "type": "panel",
+    "size": [ 20, 20 ],
+    "anchor_to": "left_middle",
+    "anchor_from": "left_middle",
+    "offset": [ 24, 0 ],
+    "controls": [
+      { "@black_border": { } },
+      {
+        "@gamerpic": {
+          "layer": 1,
+          "size": [ "100%-2px", "100%-2px" ]
+        }
+      }
+    ]
+  },
+
+  //Status image - 2 images with flipped visibility
+  "status_image": {
+    "type": "image",
+    "uv": [ 0, 0 ],
+    "uv_size": [ 9, 9 ],
+    "size": [ 9, 9 ]
+  },
+
+  "online_image@status_image": {
+    "texture": "gui/newgui/onlineLight.png",
+    "bindings": [
+      {
+        "binding_name": "#online_visible",
+        "binding_name_override": "#visible",
+        "binding_type": "collection",
+        "binding_collection_name": "friends"
+      }
+    ]
+  },
+
+  "offline_image@status_image": {
+    "texture": "gui/newgui/offlineLight.png",
+    "bindings": [
+      {
+        "binding_name": "#offline_visible",
+        "binding_name_override": "#visible",
+        "binding_type": "collection",
+        "binding_collection_name": "friends"
+      }
+    ]
+  },
+
+  "online_indicator": {
+    "type": "panel",
+    "anchor_to": "right_middle",
+    "anchor_from": "right_middle",
+    "offset": [ -6, 0 ],
+    "size": [ 9, 9 ],
+    "controls": [
+      {
+        "@online_image": { }
+      },
+      {
+        "@offline_image": { }
+      }
+    ]
+
+  },
+
+  //The selected indicator - a check box - 4 images for checked/hover
+  "checkbox_image": {
+    "type": "image",
+    "uv": [ 0, 0 ],
+    "uv_size": [ 16, 13 ],
+    "size": [ 16, 13 ],
+    "anchor_to": "left_middle",
+    "anchor_from": "left_middle",
+    "offset": [ 6, 0 ]
+  },
+
+  "checked_image@checkbox_image": {
+    "texture": "gui/newgui/buttons/checkbox/checkbox_checked.png"
+  },
+
+  "unchecked_image@checkbox_image": {
+    "texture": "gui/newgui/buttons/checkbox/checkbox_unchecked.png"
+  },
+
+  "checked_hover_image@checkbox_image": {
+    "texture": "gui/newgui/buttons/checkbox/checkbox_checked_hover.png"
+  },
+
+  "unchecked_hover_image@checkbox_image": {
+    "texture": "gui/newgui/buttons/checkbox/checkbox_unchecked_hover.png"
+  },
+
+  //labels that indicate the information about the game
+  //Since there's no flow panel we use the color switch codes to build up the string from multiple inputs
+  "friend_label": {
+    "type": "label",
+    "alignment": "left_middle",
+    "size": [ "100%-60px", "50%" ],
+    "clip": true
+
+  },
+
+  "friend_grid_label_line1@friend_label": {
+    "text": "#label_line1",
+    "alignment": "left_middle",
+    "anchor_to": "top_left",
+    "anchor_from": "top_left",
+    "offset": [ 46, 3 ],
+    "bindings": [
+      {
+        "binding_name": "#label_line1",
+        "binding_type": "collection",
+        "binding_collection_name": "friends"
+      }
+    ]
+  },
+
+  "friend_grid_label_line2@friend_label": {
+    "text": "#label_line2",
+    "alignment": "left_middle",
+    "anchor_to": "bottom_left",
+    "anchor_from": "bottom_left",
+    "offset": [ 46, 0 ],
+    "bindings": [
+      {
+        "binding_name": "#label_line2",
+        "binding_type": "collection",
+        "binding_collection_name": "friends"
+      }
+    ]
+  },
+
+    "friend_background@black_border": {
+    "size": [ "100%-2px", "100%-2px" ]
+  },
+
+  "friend_background_hover@black_border_hover": {
+    "size": [ "100%-2px", "100%-2px" ]
+  },
+
+  "hover_friend_button": {
+    "type": "panel",
+    "controls": [
+      { "@friend_button_layout": { } },
+      {
+        "hover_text@common.hover_text": {
+          "layer": 100,
+          "bindings": [
+            {
+              "binding_name": "#hover_text",
+              "binding_type": "collection",
+              "binding_collection_name": "friends"
+            }
+          ]
+        }
+      }
+    ]
+  },
+
+  "friend_button_layout": {
+    "type": "panel",
+    "layer": 1, //Without this the background disappeared on certain layout changes.
+    "controls": [
+      { "@friend_grid_label_line1": { "layer": 1 } },
+      { "@friend_grid_label_line2": { "layer": 1 } },
+      { "@online_indicator": { "layer": 1 } },
+      { "pp@gamerpic_panel": { "layer": 1 } }
+    ]
+  },
+
+  "unchecked_friend_button_layout": {
+    "type": "panel",
+    "controls": [
+      { "@friend_background": { "layer": 0 } },
+      { "@friend_button_layout": { "layer": 1 } },
+      { "@unchecked_image": {"layer": 2  } }
+    ]
+  },
+
+  "checked_friend_button_layout": {
+    "type": "panel",
+    "controls": [
+      { "@friend_background": { "layer": 0 } },
+      { "@friend_button_layout": { "layer": 1 } },
+      { "@checked_image": { "layer": 2 } }
+    ]
+  },
+
+  "unchecked_hover_friend_button_layout": {
+    "type": "panel",
+    "controls": [
+      { "@friend_background_hover": { "layer": 0 } },
+      { "@friend_button_layout": { "layer": 1 } },
+      { "@unchecked_hover_image": {"layer": 2  } },
+      { "@hover_friend_button": { } }
+    ]
+  },
+
+  "checked_hover_friend_button_layout": {
+    "type": "panel",
+    "controls": [
+      { "@friend_background_hover": { "layer": 0 } },
+      { "@friend_button_layout": { "layer": 1 } },
+      { "@checked_hover_image": {"layer": 2  } },
+      { "@hover_friend_button": { } }
+    ]
+  },
+
+
+  "friend_button@common.checkbox": {
+    "$pressed_button_name": "button.menu_friend_select",
+    "size": [ "100%", "100%" ],
+    "controls": [
+      {
+        "checked@checked_friend_button_layout": { }
+      },
+      {
+        "unchecked@unchecked_friend_button_layout": { }
+      },
+      {
+        "checked_hover@checked_hover_friend_button_layout": { }
+      },
+      {
+        "unchecked_hover@unchecked_hover_friend_button_layout": { }
+      },
+      {
+        "checked_locked@checked_friend_button_layout" : { } //unused on this screen
+      },
+      {
+        "unchecked_locked@unchecked_friend_button_layout": { } //unused on this screen
+      }
+    ],
+    "$toggle_grid_collection_name": "friends",
+    "$toggle_name": "toggle_invite",
+    "$toggle_binding_type": "collection",
+    "$toggle_state_binding_name": "toggle_invite_state"
+  },
+
+  "friend_grid_item": {
+    "type": "grid_item",
+    "size": [ "100%", 30 ],
+    "controls": [
+      {
+        "@friend_button": { }
+      }
+    ]
+  },
+
+  "friend_list_grid": {
+    "type": "grid",
+    "grid_item_template": "friend_grid_item",
+    "grid_dimension_binding": "#friend_grid_dimension",
+    "collection_name": "friends",
+    "anchor_to": "top_left",
+    "anchor_from": "top_left",
+    "layer": 2,
+    "bindings": [
+      {
+        "binding_name": "#friend_grid_dimension",
+        "binding_type": "global"
+      }
+    ]
+  },
+
+  //The invite panel with all the buttons, grid and close box
+  "invite_panel": {
+    "type": "input_panel",
+    "scroll_report": [ "friend_scroll_pane" ],
+    "size": [ "75%", "96%" ],
+    "anchor_from": "center",
+    "anchor_to": "center",
+    "controls": [
+      { "@common.common_panel": { "$dialog_background": "dialog_background_hollow_2" } },
+      {
+        "@common.scrolling_panel": {
+          "anchor_to": "top_middle",
+          "anchor_from": "top_middle",
+          "size": [ "100%-12px", "100%-60px" ],
+          "offset": [ 0, 16 ],
+          "$scrolling_content": "invite.friend_list_grid",
+          "$scroll_pane_name": "friend_scroll_pane",
+          "$show_background": false
+        }
+      },
+      {
+        "title_label": {
+          "type": "label",
+          "size": [ "100%", 25 ],
+          "alignment": "center",
+          "text": "invite.title",
+          "anchor_from": "top_middle",
+          "anchor_to": "top_middle",
+          "layer": 2,
+          "color": [ 0, 0, 0 ]
+        }
+      },
+      {
+        "clear_button@borderless_button": {
+          "$pressed_button_name": "button.clear_selection",
+          "$button_text": "invite.clear",
+          "size": [ "50%-8px", 30 ],
+          "anchor_from": "bottom_left",
+          "anchor_to": "bottom_left",
+          "layer": 2,
+          "offset": [ 6, -6 ],
+          "toggle_manager_behavior": "clear",
+          "toggle_manage_groups": [ "toggle_invite" ]
+        }
+      },
+      {
+        "send_button@borderless_button": {
+          "$pressed_button_name": "button.send_invites",
+          "$label_bind_name": "#send_button",
+          "size": [ "50%-8px", 30 ],
+          "anchor_from": "bottom_right",
+          "anchor_to": "bottom_right",
+          "layer": 2,
+          "offset": [ -6, -6 ],
+          "toggle_manager_behavior": "gather",
+          "toggle_manage_groups": [ "toggle_invite" ]
+        }
+      }
+    ]
+  },
+
+  "gamepad_helpers": {
+    "type": "panel",
+    "layer": 2,
+    "controls": [
+      {
+        "@common.gamepad_helper_a": {
+          "size": [ 30, 10 ],
+          "offset": [ -70, -2 ],
+          "anchor_from": "bottom_right",
+          "anchor_to": "bottom_right"
+        }
+      }
+    ]
+  },
+
+  // -----------------------------------------------
+  //
+  //    screen
+  //
+  // -----------------------------------------------
+  "invite_screen@common.base_screen": {
+    "type": "screen",
+    "controls": [
+      {
+        "root_panel": {
+          "type": "panel",
+          "anchor_from": "top_left",
+          "anchor_to": "top_left",
+          "controls": [
+            { "@gamepad_helpers": { } },
+            { "@invite_panel": { "layer": 1 } }
+          ]
+        }
+      }
+    ],
+    "button_mappings": [
+      {
+        "from_button_id": "button.menu_cancel",
+        "to_button_id": "button.menu_exit",
+        "mapping_type": "global"
+      },
+      {
+        "from_button_id": "button.menu_up",
+        "to_button_id": "button.menu_up",
+        "mapping_type": "global",
+        "scope": "view"
+      },
+      {
+        "from_button_id": "button.menu_down",
+        "to_button_id": "button.menu_down",
+        "mapping_type": "global",
+        "scope": "view"
+      },
+      {
+        "from_button_id": "button.menu_left",
+        "to_button_id": "button.menu_left",
+        "mapping_type": "global",
+        "scope": "view"
+      },
+      {
+        "from_button_id": "button.menu_right",
+        "to_button_id": "button.menu_right",
+        "mapping_type": "global",
+        "scope": "view"
+      }
+    ]
+  }
+}

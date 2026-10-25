@@ -1,0 +1,10 @@
+{
+  "clouds": {
+    "states": [ "DisableAlphaWrite" ],
+
+    "vertexShader": "shaders/cloud.vertex",
+    "geometryShader": "shaders/cloud.geometry",
+    "fragmentShader": "shaders/color.fragment"
+  }
+}
+

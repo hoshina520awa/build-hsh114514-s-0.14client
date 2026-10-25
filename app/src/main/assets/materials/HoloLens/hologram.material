@@ -1,0 +1,274 @@
+{
+  "hologram_sr_mesh": {
+    "vertexShader": "shaders/hologram_sr.vertex",
+    "geometryShader": "shaders/hologram_sr.geometry",
+    "fragmentShader": "shaders/hologram_sr.fragment"
+  },
+
+  "holoroom_terrain_endcap": {
+
+    "geometryShader": "shaders/holoroom_terrain_endcap.geometry",
+    "vertexShader": "shaders/holoroom_terrain_endcap.vertex",
+    "fragmentShader": "shaders/holoroom_terrain_endcap.fragment",
+
+    "defines": [ ]
+  },
+
+  "holoscreen_monoscopic_quad": {
+
+    "states": [ "DisableCulling", "DisableDepthWrite", "Blending" ],
+
+    "samplerStates": [
+      {
+        "samplerIndex": 0,
+        "textureFilter": "Bilinear"
+      }
+    ],
+
+    "blendSrc": "SourceAlpha",
+    "blendDst": "OneMinusSrcAlpha",
+
+    "depthFunc": "Always",
+
+    "vertexShader": "shaders/uv.vertex",
+    "geometryShader": "shaders/uv.geometry",
+    "fragmentShader": "shaders/texture.fragment"
+  },
+
+   "holoscreen_level_quad": {
+
+    "states": [ "DisableCulling", "DisableDepthWrite" ],
+
+    "samplerStates": [
+      {
+        "samplerIndex": 0,
+        "textureFilter": "Bilinear"
+      }
+    ],
+
+    "depthFunc": "Always",
+
+    "vertexShader": "shaders/uv.vertex",
+    "geometryShader": "shaders/uv.geometry",
+    "fragmentShader": "shaders/texture.fragment"
+  },
+
+  "holoscreen_stereoscopic_quad": {
+
+    "defines": [
+      "USE_STEREO_TEXTURE_ARRAY"
+    ],
+
+    "samplerStates": [
+      {
+        "samplerIndex": 0,
+        "textureFilter": "Bilinear"
+      }
+    ],
+
+    "depthFunc": "LessEqual",
+
+    "vertexShader": "shaders/uv.vertex",
+    "geometryShader": "shaders/hologram_uv_stereo.geometry",
+    "fragmentShader": "shaders/hologram_texture_stereo.fragment"
+  },
+
+  "hologram": {
+    "defines": [
+      "ALPHA_TEST"
+    ],
+
+    "depthFunc": "LessEqual",
+
+    "vertexShader": "shaders/color_uv.vertex",
+    "geometryShader": "shaders/color_uv.geometry",
+    "fragmentShader": "shaders/color_texture.fragment"
+  },
+
+  "holoroom_fence": {
+    "depthFunc": "LessEqual",
+
+    "vertexShader": "shaders/color_uv.vertex",
+    "geometryShader": "shaders/color_uv.geometry",
+    "fragmentShader": "shaders/color_texture.fragment"
+  },
+
+  "holoroom_skirt": {
+
+    "depthFunc": "LessEqual",
+
+    "vertexShader": "shaders/position.vertex",
+    "geometryShader": "shaders/position.geometry",
+    "fragmentShader": "shaders/current_color.fragment"
+  },
+
+  "holoroom_inner_skirt": {
+    "depthFunc": "LessEqual",
+
+    "vertexShader": "shaders/holoroom_inner_skirt.vertex",
+    "fragmentShader": "shaders/holoroom_inner_skirt.fragment",
+    "geometryShader": "shaders/holoroom_inner_skirt.geometry"
+  },
+
+  "holoscreen_one_to_one_cutout": {
+    "vertexShader": "shaders/position.vertex",
+    "geometryShader": "shaders/position.geometry",
+    "fragmentShader": "shaders/current_color.fragment"
+  },
+
+  "holoscreen_one_to_one_cutout_skyfill": {
+
+    "states": [
+      "DisableDepthTest",
+      "Blending"
+    ],
+
+    "vertexShader": "shaders/position.vertex",
+    "geometryShader": "shaders/position.geometry",
+    "fragmentShader": "shaders/current_color.fragment"
+  },
+
+  "holoroom_tableSurface": {
+    "depthFunc": "LessEqual",
+
+    "vertexShader": "shaders/holoroom_tableSurface.vertex",
+    "fragmentShader": "shaders/holoroom_tableSurface.fragment",
+    "geometryShader": "shaders/holoroom_tableSurface.geometry"
+  },
+
+  "holoroom_tableFloor": {
+    "depthFunc": "LessEqual",
+
+    "vertexShader": "shaders/color.vertex",
+    "fragmentShader": "shaders/color.fragment",
+    "geometryShader": "shaders/color.geometry"
+  },
+
+  "hololens_LSRPlane": {
+    "states": [ "DisableCulling", "DisableDepthWrite", "Blending" ],
+
+    "blendSrc": "SourceAlpha",
+    "blendDst": "OneMinusSrcAlpha",
+
+    "depthFunc": "LessEqual",
+
+    "vertexShader": "shaders/position.vertex",
+    "geometryShader": "shaders/position.geometry",
+    "fragmentShader": "shaders/current_color.fragment"
+  },
+
+  "hololens_LSRPlaneTextured": {
+    "states": [ "DisableCulling", "DisableDepthWrite", "Blending" ],
+
+    "blendSrc": "SourceAlpha",
+    "blendDst": "OneMinusSrcAlpha",
+
+    "depthFunc": "LessEqual",
+
+    "vertexShader": "shaders/uv.vertex",
+    "geometryShader": "shaders/uv.geometry",
+    "fragmentShader": "shaders/texture_ccolor.fragment"
+  },
+
+  "hololens_UICursor": {
+    "states": [ "DisableCulling", "DisableDepthWrite", "Blending" ],
+
+    "blendSrc": "SourceAlpha",
+    "blendDst": "OneMinusSrcAlpha",
+
+    "depthFunc": "Always",
+
+    "vertexShader": "shaders/uv.vertex",
+    "geometryShader": "shaders/uv.geometry",
+    "fragmentShader": "shaders/texture_ccolor.fragment"
+  },
+
+  "hololens_UICursor_ingame_pseudoshadow": {
+    "states": [ "PolygonOffset", "Blending" ],
+
+    "blendSrc": "SourceAlpha",
+    "blendDst": "OneMinusSrcAlpha",
+
+    "depthFunc": "LessEqual",
+    "polygonOffsetLevel": 1,
+
+    "vertexShader": "shaders/position.vertex",
+    "geometryShader": "shaders/position.geometry",
+    "fragmentShader": "shaders/current_color.fragment"
+  },
+
+  "hololens_UICursor_ingame_mainpart": {
+    "states": [ "PolygonOffset", "Blending" ],
+
+    "blendSrc": "SourceAlpha",
+    "blendDst": "OneMinusSrcAlpha",
+
+    "depthFunc": "LessEqual",
+    "polygonOffsetLevel": 2,
+
+    "vertexShader": "shaders/position.vertex",
+    "geometryShader": "shaders/position.geometry",
+    "fragmentShader": "shaders/current_color.fragment"
+  },
+  
+ "hologram_hit_effect": {
+    "states": [
+      "DisableDepthTest",
+      "Blending"
+    ],
+
+    "vertexShader": "shaders/position.vertex",
+    "geometryShader": "shaders/position.geometry",
+    "fragmentShader": "shaders/current_color.fragment"
+  },
+
+  "reality_frame_cutout": {
+    "states": [ "Blending" ],
+
+    "defines": [
+      "FORCE_DEPTH_ZERO"
+    ],
+
+    "vertexShader": "shaders/position.vertex",
+    "geometryShader": "shaders/position.geometry",
+    "fragmentShader": "shaders/current_color.fragment"
+  },
+
+  "reality_frame_skyfill": {
+
+    "states": [
+      "DisableDepthTest",
+      "Blending"
+    ],
+
+    "vertexShader": "shaders/position.vertex",
+    "geometryShader": "shaders/position.geometry",
+    "fragmentShader": "shaders/current_color.fragment"
+  },
+
+  "living_room": {
+    "depthFunc": "LessEqual",
+
+    "vertexShader": "shaders/uv.vertex",
+    "geometryShader": "shaders/uv.geometry",
+    "fragmentShader": "shaders/texture_ccolor.fragment"
+  },
+
+  "rift_mirror_texture": {
+
+    "states": [ "DisableCulling", "DisableDepthWrite" ],
+    "samplerStates": [
+      {
+        "samplerIndex": 0,
+        "textureFilter": "Bilinear"
+      }
+    ],
+
+    "depthFunc": "Always",
+
+    "vertexShader": "shaders/uv.vertex",
+    "geometryShader": "shaders/uv.geometry",
+    "fragmentShader": "shaders/texture.fragment"
+  }
+
+}
