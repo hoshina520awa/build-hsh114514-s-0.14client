@@ -38,27 +38,26 @@ LOCAL_SRC_FILES := main.cpp \
 	xhook/xh_util.c \
 	xhook/xh_version.c \
 	xhook/xhook.c \
-	Imgui/imgui.cpp \
-    Imgui/imgui_draw.cpp \
-    Imgui/imgui_widgets.cpp \
-    Imgui/imgui_tables.cpp \
-    Imgui/backends/imgui_impl_android.cpp \
-    Imgui/backends/imgui_impl_opengl3.cpp \
-    Imgui/backends/imgui_Input_android.cpp \
-    Imgui/ImguiManager.cpp \
-    Imgui/ImGuiInputIME.cpp \
-    Imgui/ImguiInput.cpp \
+	ImGui/imgui.cpp \
+    ImGui/imgui_draw.cpp \
+    ImGui/imgui_widgets.cpp \
+    ImGui/imgui_tables.cpp \
+    ImGui/backends/imgui_impl_android.cpp \
+    ImGui/backends/imgui_impl_opengl3.cpp \
+    ImGui/backends/imgui_Input_android.cpp \
+    ImGui/ImguiManager.cpp \
+    ImGui/ImGuiInputIME.cpp \
+    ImGui/ImguiInput.cpp \
    	mcpe/MinecraftGame.cpp
 
 
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/mcpe \
-                    $(LOCAL_PATH)/Imgui \
-                    $(LOCAL_PATH)/Imgui/backends \
-                    $(LOCAL_PATH)/Imgui/font
+                    $(LOCAL_PATH)/ImGui \
+                    $(LOCAL_PATH)/ImGui/backends \
+                    $(LOCAL_PATH)/ImGui/font
 
 
 include $(BUILD_SHARED_LIBRARY)
 $(call import-module,android/native_app_glue)
-
