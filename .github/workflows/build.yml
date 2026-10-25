@@ -6,6 +6,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # 装老版本 NDK 需要的依赖
+      - name: Install dependencies
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y libncurses5 libncurses5:i386
+
       # 阶段 1：用 JDK 17 装 SDK / NDK
       - uses: actions/setup-java@v5
         with:
@@ -13,7 +20,7 @@ jobs:
           java-version: '17'
       - uses: android-actions/setup-android@v4
       - name: Install NDK
-        run: echo "y" | sdkmanager "ndk;21.4.7075529"
+        run: echo "y" | sdkmanager "ndk;16.1.4479499"
 
       # 阶段 2：切回 JDK 11 跑老 Gradle
       - uses: actions/setup-java@v5
