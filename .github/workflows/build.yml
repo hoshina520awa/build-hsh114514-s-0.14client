@@ -6,12 +6,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # 装老版本 NDK 需要的依赖
+      # 手动安装老版本 NDK 依赖的 libncurses5
       - name: Install dependencies
         run: |
-          sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y libncurses5 libncurses5:i386
+          wget http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.2-0ubuntu2_amd64.deb
+          wget http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libncurses5_6.2-0ubuntu2_amd64.deb
+          sudo dpkg -i libtinfo5_6.2-0ubuntu2_amd64.deb libncurses5_6.2-0ubuntu2_amd64.deb || sudo apt-get install -f -y
 
       # 阶段 1：用 JDK 17 装 SDK / NDK
       - uses: actions/setup-java@v5
