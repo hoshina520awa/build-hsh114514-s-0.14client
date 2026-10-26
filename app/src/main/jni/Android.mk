@@ -49,7 +49,7 @@ LOCAL_SRC_FILES := main.cpp \
     Imgui/ImGuiInputIME.cpp \
     Imgui/ImguiInput.cpp \
    	mcpe/MinecraftGame.cpp \
-    MotionBlur.cpp
+    CheatFeatures.cpp
 
 
 

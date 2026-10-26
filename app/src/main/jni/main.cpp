@@ -14,6 +14,7 @@
 #include "ImGuiInputIME.h"
 #include "ImguiInput.h"
 #include "ImguiManager.h"
+#include "CheatFeatures.h" // <-- 引入作弊模块
 #include <string>
 #include <sstream>
 #include <Includes/obfuscate.h>
@@ -36,7 +37,6 @@
 #include <algorithm>
 #include <elf.h>
 #include <link.h>
-#include <cstring>
 #include <dlfcn.h>
 #include <new>
 #include <thread>
@@ -235,6 +235,7 @@ jint JNI_OnLoad(JavaVM *vm, void *unused) {
     }
 
     GL_Hook_Init();
+    InitCheatFeatures(); // <-- 新增：初始化作弊偏移
     initImGuiInput();
     return JNI_VERSION_1_6;
 }

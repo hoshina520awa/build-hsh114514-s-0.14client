@@ -8,7 +8,7 @@
 #include "Minecraft.h"
 #include "LevelData.h"
 #include "ImGuiInputIME.h"
-#include "MotionBlur.h" // <-- 新增：引入动态模糊头文件
+#include "CheatFeatures.h" // <-- 引入作弊模块
 #include <mutex>
 #include <thread>
 #include <EGL/egl.h>
@@ -33,7 +33,6 @@ void ImGui_ImplAndroid_UpdateDeltaTime() {
     io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f / 60.0f);
     g_Time = current_time;
 }
-
 
 using eglSwapBuffers_ = EGLBoolean(*)(EGLDisplay display, EGLSurface surface);
 static eglSwapBuffers_ o_eglSwapBuffers = nullptr;
@@ -111,7 +110,7 @@ static EGLBoolean f_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
         ImGui_ImplOpenGL3_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
         ImGui::Begin("MCPE Mod Menu");
         
         ImGui::Text("FPS: %.1f", io.Framerate);
@@ -132,13 +131,13 @@ static EGLBoolean f_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
             if (guiData) guiData->displayClientMessage("Hello World");
         }
 
-        ImGui::Separator(); // <-- 新增分割线
+        ImGui::Separator();
+        ImGui::TextColored(ImVec4(0, 1, 0, 1), "秘籍功能 (实时生效)");
         
-        // <-- 新增动态模糊开关和滑块 -->
-        ImGui::Checkbox("动态模糊 (Motion Blur)", &g_MotionBlurEnabled);
-        if (g_MotionBlurEnabled) {
-            ImGui::SliderFloat("模糊强度", &g_MotionBlurIntensity, 0.0f, 0.9f);
-        }
+        ImGui::Checkbox("超远渲染距离", &g_RenderDistanceHack);
+        ImGui::Checkbox("视角无旋转限制", &g_NoRotationLimit);
+        ImGui::Checkbox("第三人称穿墙", &g_OverShoulderView);
+        ImGui::Checkbox("子弹时间 (0.001速)", &g_BulletTime);
 
         ImGui::End();
 
@@ -146,9 +145,8 @@ static EGLBoolean f_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
-    // <-- 新增：在画面呈现给屏幕前，叠加动态模糊效果 -->
-    // 由于代码逻辑走到了这里，说明游戏画面和 ImGui 都渲染完了。
-    ApplyMotionBlur();
+    // 刷新作弊状态
+    UpdateCheatFeatures();
 
     if (o_eglSwapBuffers == nullptr) {
         o_eglSwapBuffers = (eglSwapBuffers_)dlsym(RTLD_NEXT, "eglSwapBuffers");
@@ -160,7 +158,6 @@ static EGLBoolean f_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
 
     return EGL_FALSE;
 }
-
 
 static bool s_TouchCapturedByImGui = false;
 
@@ -184,7 +181,6 @@ bool ImGui_HandleInput(AInputEvent *event) {
 }
 
 void *main_thread(void *) {
-    // 确保 xhook 正常挂载 eglSwapBuffers
     xhook_register("libminecraftpe.so", "eglSwapBuffers", (void *)f_eglSwapBuffers,
                    (void **)&o_eglSwapBuffers);
     xhook_refresh(1);
