@@ -8,6 +8,7 @@
 #include "Minecraft.h"
 #include "LevelData.h"
 #include "ImGuiInputIME.h"
+#include "MotionBlur.h" // <-- 新增：引入动态模糊头文件
 #include <mutex>
 #include <thread>
 #include <EGL/egl.h>
@@ -112,10 +113,11 @@ static EGLBoolean f_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
 
         ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
         ImGui::Begin("MCPE Mod Menu");
+        
         ImGui::Text("FPS: %.1f", io.Framerate);
         ImGui::Text("Resolution: %dx%d", imgui_Width, imgui_Height);
+        
         static char text[32] = "Text";
-
         if (ImGuiIME::InputText("Input", text, sizeof(text))) {
             LOGD("Input: %s", text);
         }
@@ -130,11 +132,23 @@ static EGLBoolean f_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
             if (guiData) guiData->displayClientMessage("Hello World");
         }
 
+        ImGui::Separator(); // <-- 新增分割线
+        
+        // <-- 新增动态模糊开关和滑块 -->
+        ImGui::Checkbox("动态模糊 (Motion Blur)", &g_MotionBlurEnabled);
+        if (g_MotionBlurEnabled) {
+            ImGui::SliderFloat("模糊强度", &g_MotionBlurIntensity, 0.0f, 0.9f);
+        }
+
         ImGui::End();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
+
+    // <-- 新增：在画面呈现给屏幕前，叠加动态模糊效果 -->
+    // 由于代码逻辑走到了这里，说明游戏画面和 ImGui 都渲染完了。
+    ApplyMotionBlur();
 
     if (o_eglSwapBuffers == nullptr) {
         o_eglSwapBuffers = (eglSwapBuffers_)dlsym(RTLD_NEXT, "eglSwapBuffers");
@@ -170,6 +184,7 @@ bool ImGui_HandleInput(AInputEvent *event) {
 }
 
 void *main_thread(void *) {
+    // 确保 xhook 正常挂载 eglSwapBuffers
     xhook_register("libminecraftpe.so", "eglSwapBuffers", (void *)f_eglSwapBuffers,
                    (void **)&o_eglSwapBuffers);
     xhook_refresh(1);
