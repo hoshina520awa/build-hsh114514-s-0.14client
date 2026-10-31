@@ -69,12 +69,13 @@ namespace spine {
 AAssetManager* g_AssetManager = nullptr;
 
 // ==========================================
-// Spine 纹理加载器
+// Spine 纹理加载器 (适配新版 API)
 // ==========================================
 class MyTextureLoader : public TextureLoader {
 public:
     void load(AtlasPage& page, const String& path) override {
-        String fullPath = String("test/") + path; 
+        String fullPath = String("test/");
+        fullPath.append(path); // 新版 String 拼接方式
         LOGD("Spine 尝试加载纹理: %s", fullPath.buffer());
 
         if (!g_AssetManager) {
@@ -113,18 +114,21 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         stbi_image_free(pixels);
-        page.setRendererObject((void*)(intptr_t)textureID);
+        
+        // 新版直接存到 page.texture
+        page.texture = (void*)(intptr_t)textureID;
         LOGD("纹理加载成功 ID: %d", textureID);
     }
 
-    void unload(AtlasPage& page) override {
-        GLuint id = (GLuint)(intptr_t)page.getRendererObject();
+    // 修复报错：新版 unload 参数是 void*
+    void unload(void* texture) override {
+        GLuint id = (GLuint)(intptr_t)texture;
         glDeleteTextures(1, &id);
     }
 };
 
 // ==========================================
-// 初始化 Spine 函数
+// 初始化 Spine 函数 (适配新版 API)
 // ==========================================
 void InitSpine() {
     LOGD("开始初始化 Spine...");
@@ -133,23 +137,20 @@ void InitSpine() {
         return;
     }
 
-    // 根据你之前的目录，文件在 assets/test/ 下
-    spAtlas* atlas = spAtlas_createFromFile("test/CH0335_home.atlas", new MyTextureLoader());
-    if (!atlas) {
-        LOGD("Atlas 加载失败！检查路径 test/CH0335_home.atlas");
-        return;
-    }
-
-    // 这里如果是 json 就换成 SkeletonJson
-    SkeletonBinary binary(atlas);
+    // 新版直接 new Atlas，不用 spAtlas_createFromFile
+    Atlas* atlas = new Atlas("test/CH0335_home.atlas", new MyTextureLoader());
+    
+    // 新版传引用 &atlas
+    SkeletonBinary binary(*atlas);
     SkeletonData* skeletonData = binary.readSkeletonData("test/CH0335_home.skel");
     if (!skeletonData) {
         LOGD("Skel 加载失败！检查路径或版本: %s", binary.getError().buffer());
         return;
     }
 
-    g_skeleton = new Skeleton(skeletonData);
-    g_state = new AnimationState(new AnimationStateData(skeletonData));
+    // 新版传引用 &skeletonData
+    g_skeleton = new Skeleton(*skeletonData);
+    g_state = new AnimationState(new AnimationStateData(*skeletonData));
     g_renderer = new SkeletonRenderer();
 
     // 打印动画名字（方便你找正确的动画名）
@@ -349,8 +350,10 @@ jint JNI_OnLoad(JavaVM *vm, void *unused) {
     if (shadowhook_hook_func_addr(init_method_address, (void *) MinecraftClient::_initMinecraftClient, (void **) &MinecraftClient::_initMinecraftClientOrigin)) {
         LOGD("Hook Successfully, baseAddress=0x%s", Main::toHexString(Main::baseAddress).c_str());
         ImGuiIME::Init(vm);
-        mBlocks = getSymbolArray<Block *>("_ZN5Block7mBlocksE");
-        mItems = getSymbolArray<Item *>("_ZN4Item6mItemsE");
+        
+        // 修复报错：明确指出是 mcpe::Block，避免和 spine::Block 冲突
+        mBlocks = getSymbolArray<mcpe::Block *>("_ZN5Block7mBlocksE");
+        mItems = getSymbolArray<mcpe::Item *>("_ZN4Item6mItemsE");
     } else {
         LOGD("Hook Failed!");
     }
