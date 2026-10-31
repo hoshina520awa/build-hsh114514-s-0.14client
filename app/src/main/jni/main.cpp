@@ -41,15 +41,24 @@
 #include <thread>
 
 // ==========================================
-// 引入 Spine 头文件和全局变量实体
+// 【终极修复区】
 // ==========================================
 #include <spine/spine.h>
 #include <spine/SkeletonRenderer.h>
 #include <spine/Extension.h>
 
+// 1. 全局变量实体
 spine::Skeleton* g_skeleton = nullptr;
 spine::AnimationState* g_state = nullptr;
 spine::SkeletonRenderer* g_renderer = nullptr;
+
+// 2. 给官方源码擦屁股：实现它缺的 getDefaultExtension
+namespace spine {
+    SpineExtension* getDefaultExtension() {
+        static DefaultSpineExtension* extension = new DefaultSpineExtension();
+        return extension;
+    }
+}
 // ==========================================
 
 JavaVM *Main::vm = nullptr;
