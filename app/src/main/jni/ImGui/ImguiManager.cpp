@@ -8,7 +8,6 @@
 #include "Minecraft.h"
 #include "LevelData.h"
 #include "ImGuiInputIME.h"
-#include "CheatFeatures.h" // <-- 引入作弊模块
 #include <mutex>
 #include <thread>
 #include <EGL/egl.h>
@@ -18,6 +17,18 @@
 #include <android/native_window_jni.h>
 #include <android/sensor.h>
 #include "xhook/xhook.h"
+
+// ==========================================
+// 【新增】引入 Spine 头文件和外部变量声明
+// ==========================================
+#include <spine/spine.h>
+#include <spine/SkeletonRenderer.h>
+
+extern spine::Skeleton* g_skeleton;
+extern spine::AnimationState* g_state;
+extern spine::SkeletonRenderer* g_renderer;
+// ==========================================
+
 
 int imgui_Width = 0;
 int imgui_Height = 0;
@@ -33,6 +44,7 @@ void ImGui_ImplAndroid_UpdateDeltaTime() {
     io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f / 60.0f);
     g_Time = current_time;
 }
+
 
 using eglSwapBuffers_ = EGLBoolean(*)(EGLDisplay display, EGLSurface surface);
 static eglSwapBuffers_ o_eglSwapBuffers = nullptr;
@@ -110,12 +122,20 @@ static EGLBoolean f_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
         ImGui_ImplOpenGL3_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+        // ==========================================
+        // 【可选】如果你想在菜单里加个测试按钮看 Spine 状态
+        // ==========================================
+        ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
         ImGui::Begin("MCPE Mod Menu");
-        
         ImGui::Text("FPS: %.1f", io.Framerate);
         ImGui::Text("Resolution: %dx%d", imgui_Width, imgui_Height);
         
+        if (g_skeleton) {
+            ImGui::TextColored(ImVec4(0, 1, 0, 1), "Spine: 已加载");
+        } else {
+            ImGui::TextColored(ImVec4(1, 0, 0, 1), "Spine: 未加载");
+        }
+
         static char text[32] = "Text";
         if (ImGuiIME::InputText("Input", text, sizeof(text))) {
             LOGD("Input: %s", text);
@@ -131,22 +151,33 @@ static EGLBoolean f_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
             if (guiData) guiData->displayClientMessage("Hello World");
         }
 
-        ImGui::Separator();
-        ImGui::TextColored(ImVec4(0, 1, 0, 1), "秘籍功能 (实时生效)");
-        
-        ImGui::Checkbox("超远渲染距离", &g_RenderDistanceHack);
-        ImGui::Checkbox("视角无旋转限制", &g_NoRotationLimit);
-        ImGui::Checkbox("第三人称穿墙", &g_OverShoulderView);
-        ImGui::Checkbox("子弹时间 (0.001速)", &g_BulletTime);
-
         ImGui::End();
+
+        // ==========================================
+        // 【核心修改】在 ImGui 渲染前，把 Spine 画出来！
+        // ==========================================
+        if (g_skeleton && g_state && g_renderer) {
+            // 1. 更新动画 (每帧更新，假设 60fps)
+            g_state->update(0.016f);
+            g_state->apply(*g_skeleton);
+            g_skeleton->updateWorldTransform();
+
+            // 2. 保存当前状态并调整
+            GLboolean depth_test = glIsEnabled(GL_DEPTH_TEST);
+            glDisable(GL_DEPTH_TEST); 
+            glViewport(0, 0, imgui_Width, imgui_Height); // 确保画在全屏
+
+            // 3. 绘制 Spine
+            g_renderer->draw(*g_skeleton);
+
+            // 4. 恢复状态给 ImGui 用
+            if (depth_test) glEnable(GL_DEPTH_TEST);
+        }
+        // ==========================================
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
-
-    // 刷新作弊状态
-    UpdateCheatFeatures();
 
     if (o_eglSwapBuffers == nullptr) {
         o_eglSwapBuffers = (eglSwapBuffers_)dlsym(RTLD_NEXT, "eglSwapBuffers");
@@ -158,6 +189,7 @@ static EGLBoolean f_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
 
     return EGL_FALSE;
 }
+
 
 static bool s_TouchCapturedByImGui = false;
 
