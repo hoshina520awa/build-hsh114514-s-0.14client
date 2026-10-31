@@ -1,7 +1,7 @@
 LOCAL_PATH := $(call my-dir)
 
 # ==========================================
-# 1. 预编译库 (原版保留)
+# 1. 预编译库
 # ==========================================
 include $(CLEAR_VARS)
 LOCAL_MODULE    := mcpe
@@ -14,7 +14,7 @@ LOCAL_SRC_FILES := prebuilt/libfmod.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 # ==========================================
-# 2. 自动抓取 Spine 源码 (防手残漏文件)
+# 2. 自动抓取 Spine 源码
 # ==========================================
 SPINE_DIR := $(LOCAL_PATH)/spine-cpp
 SPINE_SRC := $(wildcard $(SPINE_DIR)/src/spine/*.cpp)
@@ -25,8 +25,9 @@ SPINE_SRC := $(wildcard $(SPINE_DIR)/src/spine/*.cpp)
 include $(CLEAR_VARS)
 LOCAL_MODULE    := Mod
 
+# 注意这里：把 -std=c++17 改成了 -std=c++1z (老版本 NDK 的 17 标准写法)
 LOCAL_CFLAGS := -w -Wno-error=format-security -fvisibility=hidden -fpermissive 
-LOCAL_CPPFLAGS := -w -Wno-error=format-security -fvisibility=hidden -Werror -std=c++17 
+LOCAL_CPPFLAGS := -w -Wno-error=format-security -fvisibility=hidden -Werror -std=c++1z 
 LOCAL_CPPFLAGS += -Wno-error=c++11-narrowing -fpermissive -Wall
 
 LOCAL_LDFLAGS += -Wl,--gc-sections
@@ -34,11 +35,11 @@ LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv2 -lGLESv3
 LOCAL_SHARED_LIBRARIES := mcpe fmod
 LOCAL_STATIC_LIBRARIES  := android_native_app_glue
 
-# 必须开启 RTTI 和 异常
+# 保持开启 RTTI 和 异常
 LOCAL_CPP_FEATURES      := rtti exceptions
 LOCAL_ARM_MODE := arm
 
-# 你的原版 C++ 和 C 文件 (注意这里全部改成了 ImGui)
+# 你的原版文件
 LOCAL_SRC_FILES := main.cpp \
     stb_impl.cpp \
     Hook/VtableHook.cpp \
@@ -66,10 +67,9 @@ LOCAL_SRC_FILES := main.cpp \
     ImGui/ImguiInput.cpp \
     mcpe/MinecraftGame.cpp
 
-# 加入 Spine 文件
 LOCAL_SRC_FILES += $(SPINE_SRC)
 
-# 包含头文件路径 (注意这里也改成了 ImGui)
+# 包含头文件路径
 LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/mcpe \
                     $(LOCAL_PATH)/ImGui \
