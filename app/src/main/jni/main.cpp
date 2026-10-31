@@ -40,8 +40,6 @@
 #include <new>
 #include <thread>
 #include <GLES2/gl2.h>
-#include <android/asset_manager_jni.h>
-#include <android/asset_manager.h>
 
 // ==========================================
 // 引入 Spine 和 stb_image
@@ -57,7 +55,6 @@ spine::Skeleton* g_skeleton = nullptr;
 spine::AnimationState* g_state = nullptr;
 spine::SkeletonRenderer* g_renderer = nullptr;
 
-// 给官方源码擦屁股：实现它缺的 getDefaultExtension
 namespace spine {
     SpineExtension* getDefaultExtension() {
         static DefaultSpineExtension* extension = new DefaultSpineExtension();
@@ -65,34 +62,30 @@ namespace spine {
     }
 }
 
-// 全局 AAssetManager
-AAssetManager* g_AssetManager = nullptr;
-
 // ==========================================
-// Spine 纹理加载器
+// Spine 纹理加载器 (改为读取 com.mojang 目录)
 // ==========================================
 class MyTextureLoader : public TextureLoader {
 public:
     void load(AtlasPage& page, const String& path) override {
-        String fullPath = String("test/");
+        // 核心修改：路径指向 com.mojang/spine/
+        String fullPath = String("/storage/emulated/0/games/com.mojang/spine/");
         fullPath.append(path); 
-        LOGD("Spine 尝试加载纹理: %s", fullPath.buffer());
+        LOGD("Spine 尝试加载外部纹理: %s", fullPath.buffer());
 
-        if (!g_AssetManager) {
-            LOGD("错误：g_AssetManager 为空！读不了文件！");
+        FILE* file = fopen(fullPath.buffer(), "rb");
+        if (!file) {
+            LOGD("错误：无法打开本地图片 %s", fullPath.buffer());
             return;
         }
 
-        AAsset* asset = AAssetManager_open(g_AssetManager, fullPath.buffer(), AASSET_MODE_BUFFER);
-        if (!asset) {
-            LOGD("错误：找不到文件 %s", fullPath.buffer());
-            return;
-        }
+        fseek(file, 0, SEEK_END);
+        long len = ftell(file);
+        fseek(file, 0, SEEK_SET);
 
-        int len = AAsset_getLength(asset);
         void* data = malloc(len);
-        AAsset_read(asset, data, len);
-        AAsset_close(asset);
+        fread(data, 1, len, file);
+        fclose(file);
 
         int width, height, channels;
         unsigned char* pixels = stbi_load_from_memory((unsigned char*)data, len, &width, &height, &channels, 4);
@@ -129,26 +122,26 @@ public:
 // 初始化 Spine 函数
 // ==========================================
 void InitSpine() {
-    LOGD("开始初始化 Spine...");
-    if (!g_AssetManager) {
-        LOGD("致命错误: g_AssetManager 为空，无法读取 assets 目录！");
-        return;
-    }
+    LOGD("开始初始化 Spine (com.mojang 外部路径模式)...");
 
-    Atlas* atlas = new Atlas("test/CH0335_home.atlas", new MyTextureLoader());
+    // 读外部 atlas
+    Atlas* atlas = new Atlas("/storage/emulated/0/games/com.mojang/spine/CH0335_home.atlas", new MyTextureLoader());
     
     SkeletonBinary binary(*atlas);
     
-    // 读取 skel
-    AAsset* skelAsset = AAssetManager_open(g_AssetManager, "test/CH0335_home.skel", AASSET_MODE_BUFFER);
-    if (!skelAsset) {
-        LOGD("找不到 skel 文件！");
+    // 读外部 skel
+    FILE* skelFile = fopen("/storage/emulated/0/games/com.mojang/spine/CH0335_home.skel", "rb");
+    if (!skelFile) {
+        LOGD("错误：找不到外部 skel 文件！");
         return;
     }
-    int skelLen = AAsset_getLength(skelAsset);
+    fseek(skelFile, 0, SEEK_END);
+    long skelLen = ftell(skelFile);
+    fseek(skelFile, 0, SEEK_SET);
+    
     void* skelData = malloc(skelLen);
-    AAsset_read(skelAsset, skelData, skelLen);
-    AAsset_close(skelAsset);
+    fread(skelData, 1, skelLen, skelFile);
+    fclose(skelFile);
 
     SkeletonData* skeletonData = binary.readSkeletonData((const unsigned char*)skelData, skelLen);
     free(skelData);
@@ -168,6 +161,7 @@ void InitSpine() {
         LOGD("找到动画: %s", skeletonData->getAnimations()[i]->getName().buffer());
     }
 
+    // 播放动画
     g_state->setAnimation(0, "animation", true); 
 
     g_skeleton->setScaleX(1.0f); 
@@ -179,7 +173,8 @@ void InitSpine() {
 }
 
 // ==========================================
-
+// 底包原有代码
+// ==========================================
 JavaVM *Main::vm = nullptr;
 unsigned long Main::baseAddress = 0L;
 
@@ -319,27 +314,8 @@ void AddEffect(int potionId, int duration, int amplifier, bool ambient, bool sho
 }
 
 // ==========================================
-// 通过 JNI 反射拿到 AssetManager
+// 初始化
 // ==========================================
-void InitAssetManager() {
-    JNIEnv *env = Main::currentEnv();
-    if (!env) return;
-    
-    jclass activityThreadClass = env->FindClass("android/app/ActivityThread");
-    jmethodID currentActivityThreadMethod = env->GetStaticMethodID(activityThreadClass, "currentActivityThread", "()Landroid/app/ActivityThread;");
-    jobject activityThread = env->CallStaticObjectMethod(activityThreadClass, currentActivityThreadMethod);
-    
-    jmethodID getApplicationMethod = env->GetMethodID(activityThreadClass, "getApplication", "()Landroid/app/Application;");
-    jobject application = env->CallObjectMethod(activityThread, getApplicationMethod);
-    
-    jclass contextClass = env->GetObjectClass(application);
-    jmethodID getAssetsMethod = env->GetMethodID(contextClass, "getAssets", "()Landroid/content/res/AssetManager;");
-    jobject assets = env->CallObjectMethod(application, getAssetsMethod);
-    
-    g_AssetManager = AAssetManager_fromJava(env, assets);
-    LOGD("AssetManager 获取结果: %p", g_AssetManager);
-}
-
 jint JNI_OnLoad(JavaVM *vm, void *unused) {
     Main::vm = vm;
     JNIEnv *env = nullptr;
@@ -347,9 +323,6 @@ jint JNI_OnLoad(JavaVM *vm, void *unused) {
         return JNI_ERR;
     }
     Main::baseAddress = Main::findLibBaseAddress("libminecraftpe.so");
-
-    // 1. 获取 AssetManager
-    InitAssetManager();
 
     const char *init_method_name = "_ZN15MinecraftClient4initEv";
     void *init_method_address = Main::findSymbol(init_method_name);
@@ -359,14 +332,13 @@ jint JNI_OnLoad(JavaVM *vm, void *unused) {
         LOGD("Hook Successfully, baseAddress=0x%s", Main::toHexString(Main::baseAddress).c_str());
         ImGuiIME::Init(vm);
         
-        // 使用全局作用域 :: 解决命名冲突
         mBlocks = getSymbolArray<::Block *>("_ZN5Block7mBlocksE");
         mItems = getSymbolArray<::Item *>("_ZN4Item6mItemsE");
     } else {
         LOGD("Hook Failed!");
     }
 
-    // 2. 初始化 Spine
+    // 初始化 Spine
     InitSpine();
 
     GL_Hook_Init();
