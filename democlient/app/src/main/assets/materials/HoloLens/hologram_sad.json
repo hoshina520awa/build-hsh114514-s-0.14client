@@ -1,0 +1,8 @@
+[
+  {"path":"materials/HoloLens/fancy.material"}, // NOTE: This only affects clouds, which need the fancy material in order to blend and set alpha correctly
+  // NOTE: Even though this is non-fancy graphics, we still use the "FANCY" define to use curved fog/water and entity lighting - those are needed for VR even though other fancy features are not
+  {"path":"materials/HoloLens/entity.material", "defines":["FANCY"]},
+  {"path":"materials/HoloLens/terrain.material", "defines":["FANCY"]},
+  {"path":"materials/HoloLens/terrain.material", "defines":["FANCY", "FOG"], "tag":"_fog"},
+  {"path":"materials/HoloLens/hologram.material"}
+]

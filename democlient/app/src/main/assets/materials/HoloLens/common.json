@@ -1,0 +1,7 @@
+[
+	{"path":"materials/HoloLens/particles.material"},
+	{"path":"materials/HoloLens/shadows.material"},
+	{"path":"materials/HoloLens/sky.material"},
+	{"path":"materials/HoloLens/ui.material"},
+	{"path":"materials/HoloLens/ui3D.material"}
+]

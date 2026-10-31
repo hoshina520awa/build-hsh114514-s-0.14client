@@ -1,0 +1,7 @@
+[
+	{"path":"materials/HoloLens/fancy.material"},
+	{"path":"materials/HoloLens/entity.material", "defines":["FANCY"]},
+	{"path":"materials/HoloLens/terrain.material", "defines":["FANCY"]},
+  {"path":"materials/HoloLens/terrain.material", "defines":["FANCY", "FOG"], "tag":"_fog"},
+  {"path":"materials/HoloLens/hologram.material"}
+]

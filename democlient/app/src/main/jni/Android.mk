@@ -1,0 +1,83 @@
+LOCAL_PATH := $(call my-dir)
+
+# ==========================================
+# 1. 预编译库 (原版保留)
+# ==========================================
+include $(CLEAR_VARS)
+LOCAL_MODULE    := mcpe
+LOCAL_SRC_FILES := prebuilt/libminecraftpe.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE    := fmod
+LOCAL_SRC_FILES := prebuilt/libfmod.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+# ==========================================
+# 2. 自动抓取 Spine 源码 (防手残漏文件)
+# ==========================================
+SPINE_DIR := $(LOCAL_PATH)/spine-cpp
+SPINE_SRC := $(wildcard $(SPINE_DIR)/src/spine/*.cpp)
+
+# ==========================================
+# 3. 编译 Mod 主模块
+# ==========================================
+include $(CLEAR_VARS)
+LOCAL_MODULE    := Mod
+
+# 【修改点】去掉了 -s (防止崩溃无日志)、-fno-exceptions (Spine 必须用)、升到 c++17
+LOCAL_CFLAGS := -w -Wno-error=format-security -fvisibility=hidden -fpermissive 
+LOCAL_CPPFLAGS := -w -Wno-error=format-security -fvisibility=hidden -Werror -std=c++17 
+LOCAL_CPPFLAGS += -Wno-error=c++11-narrowing -fpermissive -Wall
+
+LOCAL_LDFLAGS += -Wl,--gc-sections
+LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv2 -lGLESv3
+LOCAL_SHARED_LIBRARIES := mcpe fmod
+LOCAL_STATIC_LIBRARIES  := android_native_app_glue
+
+# 必须开启 RTTI 和 异常
+LOCAL_CPP_FEATURES      := rtti exceptions
+LOCAL_ARM_MODE := arm
+
+# 你的原版 C++ 和 C 文件 (加入了 stb_impl.cpp)
+LOCAL_SRC_FILES := main.cpp \
+    stb_impl.cpp \
+    Hook/VtableHook.cpp \
+    Substrate/hde64.c \
+    Substrate/SubstrateDebug.cpp \
+    Substrate/SubstrateHook.cpp \
+    Substrate/SubstratePosixMemory.cpp \
+    Substrate/SymbolFinder.cpp \
+    xhook/xh_core.c \
+    xhook/xh_elf.c \
+    xhook/xh_jni.c \
+    xhook/xh_log.c \
+    xhook/xh_util.c \
+    xhook/xh_version.c \
+    xhook/xhook.c \
+    Imgui/imgui.cpp \
+    Imgui/imgui_draw.cpp \
+    Imgui/imgui_widgets.cpp \
+    Imgui/imgui_tables.cpp \
+    Imgui/backends/imgui_impl_android.cpp \
+    Imgui/backends/imgui_impl_opengl3.cpp \
+    Imgui/backends/imgui_Input_android.cpp \
+    Imgui/ImguiManager.cpp \
+    Imgui/ImGuiInputIME.cpp \
+    Imgui/ImguiInput.cpp \
+    mcpe/MinecraftGame.cpp
+
+# 【合并点】加入刚才抓取的 Spine 文件
+LOCAL_SRC_FILES += $(SPINE_SRC)
+
+# 包含头文件路径
+LOCAL_C_INCLUDES := $(LOCAL_PATH) \
+                    $(LOCAL_PATH)/mcpe \
+                    $(LOCAL_PATH)/Imgui \
+                    $(LOCAL_PATH)/Imgui/backends \
+                    $(LOCAL_PATH)/Imgui/font \
+                    $(LOCAL_PATH)/spine-cpp/include \
+                    $(LOCAL_PATH)/Includes
+
+include $(BUILD_SHARED_LIBRARY)
+$(call import-module,android/native_app_glue)
