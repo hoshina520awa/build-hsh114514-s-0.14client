@@ -19,7 +19,7 @@
 #include "xhook/xhook.h"
 
 // ==========================================
-// 【新增】引入 Spine 头文件和外部变量声明
+// 引入 Spine 头文件和外部变量声明
 // ==========================================
 #include <spine/spine.h>
 #include <spine/SkeletonRenderer.h>
@@ -122,9 +122,6 @@ static EGLBoolean f_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
         ImGui_ImplOpenGL3_NewFrame();
         ImGui::NewFrame();
 
-        // ==========================================
-        // 【可选】如果你想在菜单里加个测试按钮看 Spine 状态
-        // ==========================================
         ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
         ImGui::Begin("MCPE Mod Menu");
         ImGui::Text("FPS: %.1f", io.Framerate);
@@ -154,23 +151,25 @@ static EGLBoolean f_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
         ImGui::End();
 
         // ==========================================
-        // 【核心修改】在 ImGui 渲染前，把 Spine 画出来！
+        // Spine 渲染
         // ==========================================
         if (g_skeleton && g_state && g_renderer) {
-            // 1. 更新动画 (每帧更新，假设 60fps)
+            // 1. 更新动画
             g_state->update(0.016f);
             g_state->apply(*g_skeleton);
-            g_skeleton->updateWorldTransform();
+            
+            // 修正报错1：新版需要指定 Physics 参数
+            g_skeleton->updateWorldTransform(spine::Physics_Update);
 
-            // 2. 保存当前状态并调整
+            // 2. 保存当前状态
             GLboolean depth_test = glIsEnabled(GL_DEPTH_TEST);
             glDisable(GL_DEPTH_TEST); 
-            glViewport(0, 0, imgui_Width, imgui_Height); // 确保画在全屏
+            glViewport(0, 0, imgui_Width, imgui_Height);
 
-            // 3. 绘制 Spine
-            g_renderer->draw(*g_skeleton);
+            // 修正报错2：新版把 draw 改成了 render
+            g_renderer->render(*g_skeleton);
 
-            // 4. 恢复状态给 ImGui 用
+            // 3. 恢复状态
             if (depth_test) glEnable(GL_DEPTH_TEST);
         }
         // ==========================================
