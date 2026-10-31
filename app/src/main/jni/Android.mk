@@ -25,7 +25,6 @@ SPINE_SRC := $(wildcard $(SPINE_DIR)/src/spine/*.cpp)
 include $(CLEAR_VARS)
 LOCAL_MODULE    := Mod
 
-# 【修改点】去掉了 -s (防止崩溃无日志)、-fno-exceptions (Spine 必须用)、升到 c++17
 LOCAL_CFLAGS := -w -Wno-error=format-security -fvisibility=hidden -fpermissive 
 LOCAL_CPPFLAGS := -w -Wno-error=format-security -fvisibility=hidden -Werror -std=c++17 
 LOCAL_CPPFLAGS += -Wno-error=c++11-narrowing -fpermissive -Wall
@@ -39,7 +38,7 @@ LOCAL_STATIC_LIBRARIES  := android_native_app_glue
 LOCAL_CPP_FEATURES      := rtti exceptions
 LOCAL_ARM_MODE := arm
 
-# 你的原版 C++ 和 C 文件 (加入了 stb_impl.cpp)
+# 你的原版 C++ 和 C 文件 (注意这里全部改成了 ImGui)
 LOCAL_SRC_FILES := main.cpp \
     stb_impl.cpp \
     Hook/VtableHook.cpp \
@@ -55,27 +54,27 @@ LOCAL_SRC_FILES := main.cpp \
     xhook/xh_util.c \
     xhook/xh_version.c \
     xhook/xhook.c \
-    Imgui/imgui.cpp \
-    Imgui/imgui_draw.cpp \
-    Imgui/imgui_widgets.cpp \
-    Imgui/imgui_tables.cpp \
-    Imgui/backends/imgui_impl_android.cpp \
-    Imgui/backends/imgui_impl_opengl3.cpp \
-    Imgui/backends/imgui_Input_android.cpp \
-    Imgui/ImguiManager.cpp \
-    Imgui/ImGuiInputIME.cpp \
-    Imgui/ImguiInput.cpp \
+    ImGui/imgui.cpp \
+    ImGui/imgui_draw.cpp \
+    ImGui/imgui_widgets.cpp \
+    ImGui/imgui_tables.cpp \
+    ImGui/backends/imgui_impl_android.cpp \
+    ImGui/backends/imgui_impl_opengl3.cpp \
+    ImGui/backends/imgui_Input_android.cpp \
+    ImGui/ImguiManager.cpp \
+    ImGui/ImGuiInputIME.cpp \
+    ImGui/ImguiInput.cpp \
     mcpe/MinecraftGame.cpp
 
-# 【合并点】加入刚才抓取的 Spine 文件
+# 加入 Spine 文件
 LOCAL_SRC_FILES += $(SPINE_SRC)
 
-# 包含头文件路径
+# 包含头文件路径 (注意这里也改成了 ImGui)
 LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/mcpe \
-                    $(LOCAL_PATH)/Imgui \
-                    $(LOCAL_PATH)/Imgui/backends \
-                    $(LOCAL_PATH)/Imgui/font \
+                    $(LOCAL_PATH)/ImGui \
+                    $(LOCAL_PATH)/ImGui/backends \
+                    $(LOCAL_PATH)/ImGui/font \
                     $(LOCAL_PATH)/spine-cpp/include \
                     $(LOCAL_PATH)/Includes
 
