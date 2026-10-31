@@ -55,6 +55,29 @@ spine::Skeleton* g_skeleton = nullptr;
 spine::AnimationState* g_state = nullptr;
 spine::SkeletonRenderer* g_renderer = nullptr;
 
+// 用于存放所有日志的字符串
+std::string g_Logs = "";
+
+// 自定义日志函数，既打印到 logcat，也存到内存里
+void AddLog(const char* format, ...) {
+    char buffer[1024];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+
+    LOGD("%s", buffer);
+    g_Logs += buffer;
+    g_Logs += "\n";
+
+    // 同时写入到本地文件，方便你直接去文件管理器看
+    FILE* f = fopen("/storage/emulated/0/games/com.mojang/spine_debug.txt", "a");
+    if (f) {
+        fprintf(f, "%s\n", buffer);
+        fclose(f);
+    }
+}
+
 namespace spine {
     SpineExtension* getDefaultExtension() {
         static DefaultSpineExtension* extension = new DefaultSpineExtension();
@@ -63,26 +86,27 @@ namespace spine {
 }
 
 // ==========================================
-// Spine 纹理加载器 (改为读取 com.mojang 目录)
+// Spine 纹理加载器
 // ==========================================
 class MyTextureLoader : public TextureLoader {
 public:
     void load(AtlasPage& page, const String& path) override {
-        // 核心修改：路径指向 com.mojang/spine/
-        String fullPath = String("/storage/emulated/0/games/com.mojang/spine/");
-        fullPath.append(path); 
-        LOGD("Spine 尝试加载外部纹理: %s", fullPath.buffer());
+        // 提取路径的目录部分（因为 path 只是文件名）
+        std::string basePath = g_CurrentSpineBasePath;
+        String fullPath = String(basePath.c_str());
+        fullPath.append(path);
+
+        AddLog("[Spine] 尝试加载纹理: %s", fullPath.buffer());
 
         FILE* file = fopen(fullPath.buffer(), "rb");
         if (!file) {
-            LOGD("错误：无法打开本地图片 %s", fullPath.buffer());
+            AddLog("[错误] 无法打开纹理! errno: %d", errno);
             return;
         }
 
         fseek(file, 0, SEEK_END);
         long len = ftell(file);
         fseek(file, 0, SEEK_SET);
-
         void* data = malloc(len);
         fread(data, 1, len, file);
         fclose(file);
@@ -92,7 +116,7 @@ public:
         free(data);
 
         if (!pixels) {
-            LOGD("错误：stb_image 解码图片失败！");
+            AddLog("[错误] stb_image 解码图片失败！");
             return;
         }
 
@@ -107,9 +131,8 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         stbi_image_free(pixels);
-        
         page.texture = (void*)(intptr_t)textureID;
-        LOGD("纹理加载成功 ID: %d", textureID);
+        AddLog("[Spine] 纹理加载成功 ID: %d", textureID);
     }
 
     void unload(void* texture) override {
@@ -119,26 +142,65 @@ public:
 };
 
 // ==========================================
-// 初始化 Spine 函数
+// 初始化 Spine 函数 (带盲盒测试与日志)
 // ==========================================
 void InitSpine() {
-    LOGD("开始初始化 Spine (com.mojang 外部路径模式)...");
+    AddLog("====== 开始 Spine 初始化测试 ======");
 
-    // 读外部 atlas
-    Atlas* atlas = new Atlas("/storage/emulated/0/games/com.mojang/spine/CH0335_home.atlas", new MyTextureLoader());
+    // 测试多个可能的路径
+    std::string paths[] = {
+        "/storage/emulated/0/games/com.mojang/spine/",
+        "/storage/emulated/0/games/codm.Nexus/spine/",
+        "/storage/emulated/0/Android/data/com.start.clienttest/files/spine/",
+        "/storage/emulated/0/spine/"
+    };
+
+    std::string successPath = "";
+
+    for (const std::string& path : paths) {
+        std::string testFile = path + "CH0335_home.skel";
+        AddLog("[检查] 尝试路径: %s", testFile.c_str());
+
+        FILE* testF = fopen(testFile.c_str(), "rb");
+        if (testF) {
+            fclose(testF);
+            successPath = path;
+            AddLog("[成功] 找到文件! 路径: %s", path.c_str());
+            break;
+        } else {
+            AddLog("[失败] fopen 错误码: %d (2=找不到文件, 13=没权限)", errno);
+        }
+    }
+
+    if (successPath.empty()) {
+        AddLog("[致命错误] 所有路径都找不到 skel 文件！放弃加载。");
+        return;
+    }
+
+    // 保存全局路径供纹理加载器使用
+    g_CurrentSpineBasePath = successPath;
+
+    // 开始加载
+    AddLog("[Spine] 开始加载 Atlas...");
+    String atlasPath = String(successPath.c_str());
+    atlasPath.append("CH0335_home.atlas");
+    
+    Atlas* atlas = new Atlas(atlasPath.buffer(), new MyTextureLoader());
     
     SkeletonBinary binary(*atlas);
     
-    // 读外部 skel
-    FILE* skelFile = fopen("/storage/emulated/0/games/com.mojang/spine/CH0335_home.skel", "rb");
+    AddLog("[Spine] 开始读取 Skel...");
+    String skelPath = String(successPath.c_str());
+    skelPath.append("CH0335_home.skel");
+
+    FILE* skelFile = fopen(skelPath.buffer(), "rb");
     if (!skelFile) {
-        LOGD("错误：找不到外部 skel 文件！");
+        AddLog("[错误] 二次打开 skel 失败 (什么鬼)");
         return;
     }
     fseek(skelFile, 0, SEEK_END);
     long skelLen = ftell(skelFile);
     fseek(skelFile, 0, SEEK_SET);
-    
     void* skelData = malloc(skelLen);
     fread(skelData, 1, skelLen, skelFile);
     fclose(skelFile);
@@ -147,29 +209,40 @@ void InitSpine() {
     free(skelData);
 
     if (!skeletonData) {
-        LOGD("Skel 加载失败！检查版本兼容性: %s", binary.getError().buffer());
+        AddLog("[错误] Skel 数据解析失败！(版本不兼容?) Error: %s", binary.getError().buffer());
         return;
     }
 
     g_skeleton = new Skeleton(*skeletonData);
-    
     AnimationStateData* stateData = new AnimationStateData(*skeletonData);
     g_state = new AnimationState(*stateData);
     g_renderer = new SkeletonRenderer();
 
+    AddLog("[Spine] 动画列表:");
     for (size_t i = 0; i < skeletonData->getAnimations().size(); i++) {
-        LOGD("找到动画: %s", skeletonData->getAnimations()[i]->getName().buffer());
+        AddLog("  - %s", skeletonData->getAnimations()[i]->getName().buffer());
     }
 
-    // 播放动画
+    // 播放动画 (这里如果崩溃请改名字)
     g_state->setAnimation(0, "animation", true); 
-
+    
     g_skeleton->setScaleX(1.0f); 
     g_skeleton->setScaleY(1.0f);
     g_skeleton->setX(500); 
     g_skeleton->setY(500);
 
-    LOGD("Spine 初始化成功！");
+    AddLog("====== Spine 加载流程结束 ======");
+}
+
+// ==========================================
+// 供 ImGui 获取日志的接口
+// ==========================================
+const char* GetSpineLogs() {
+    return g_Logs.c_str();
+}
+
+bool IsSpineLoaded() {
+    return g_skeleton != nullptr;
 }
 
 // ==========================================
@@ -329,16 +402,19 @@ jint JNI_OnLoad(JavaVM *vm, void *unused) {
     if (!init_method_address) return JNI_ERR;
 
     if (shadowhook_hook_func_addr(init_method_address, (void *) MinecraftClient::_initMinecraftClient, (void **) &MinecraftClient::_initMinecraftClientOrigin)) {
-        LOGD("Hook Successfully, baseAddress=0x%s", Main::toHexString(Main::baseAddress).c_str());
+        AddLog("Hook Successfully, baseAddress=0x%s", Main::toHexString(Main::baseAddress).c_str());
         ImGuiIME::Init(vm);
         
         mBlocks = getSymbolArray<::Block *>("_ZN5Block7mBlocksE");
         mItems = getSymbolArray<::Item *>("_ZN4Item6mItemsE");
     } else {
-        LOGD("Hook Failed!");
+        AddLog("Hook Failed!");
     }
 
-    // 初始化 Spine
+    // 清空旧的 debug 文件
+    FILE* f = fopen("/storage/emulated/0/games/com.mojang/spine_debug.txt", "w");
+    if (f) fclose(f);
+
     InitSpine();
 
     GL_Hook_Init();
