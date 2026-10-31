@@ -14,11 +14,10 @@ LOCAL_SRC_FILES := prebuilt/libfmod.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 # ==========================================
-# 2. 自动抓取 Spine 源码 (排除 Extension.cpp)
+# 2. 自动抓取 Spine 源码 (全量抓取，绝不过滤！)
 # ==========================================
 SPINE_DIR := $(LOCAL_PATH)/spine-cpp
-# 这里直接用 shell 命令彻底排除 Extension.cpp，老版本 NDK 也不会有意见
-SPINE_SRC := $(shell find $(SPINE_DIR)/src/spine -name "*.cpp" ! -name "Extension.cpp")
+SPINE_SRC := $(wildcard $(SPINE_DIR)/src/spine/*.cpp)
 
 # ==========================================
 # 3. 编译 Mod 主模块
@@ -38,7 +37,7 @@ LOCAL_STATIC_LIBRARIES  := android_native_app_glue
 LOCAL_CPP_FEATURES      := rtti exceptions
 LOCAL_ARM_MODE := arm
 
-# 你的原版文件
+# 原版文件
 LOCAL_SRC_FILES := main.cpp \
     stb_impl.cpp \
     Hook/VtableHook.cpp \
