@@ -41,7 +41,7 @@
 #include <thread>
 
 // ==========================================
-// 【修复区】引入 Spine 头文件和补全实体
+// 引入 Spine 头文件和全局变量实体
 // ==========================================
 #include <spine/spine.h>
 #include <spine/SkeletonRenderer.h>
@@ -50,22 +50,6 @@
 spine::Skeleton* g_skeleton = nullptr;
 spine::AnimationState* g_state = nullptr;
 spine::SkeletonRenderer* g_renderer = nullptr;
-
-namespace spine {
-    class DefaultSpineExtension : public SpineExtension {
-    public:
-        void* _alloc(size_t size, const char* file, int line) override { return malloc(size); }
-        void* _calloc(size_t num, size_t size, const char* file, int line) override { return calloc(num, size); }
-        void* _realloc(void* ptr, size_t size, const char* file, int line) override { return realloc(ptr, size); }
-        void _free(void* mem, const char* file, int line) override { free(mem); }
-        char* _readFile(const String& path, int* length) override { return nullptr; }
-    };
-
-    SpineExtension* getDefaultExtension() {
-        static DefaultSpineExtension extension;
-        return &extension;
-    }
-}
 // ==========================================
 
 JavaVM *Main::vm = nullptr;
