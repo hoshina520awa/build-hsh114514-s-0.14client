@@ -14,10 +14,11 @@ LOCAL_SRC_FILES := prebuilt/libfmod.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 # ==========================================
-# 2. 自动抓取 Spine 源码
+# 2. 自动抓取 Spine 源码 (排除 Extension.cpp)
 # ==========================================
 SPINE_DIR := $(LOCAL_PATH)/spine-cpp
-SPINE_SRC := $(wildcard $(SPINE_DIR)/src/spine/*.cpp)
+# 这里直接用 shell 命令彻底排除 Extension.cpp，老版本 NDK 也不会有意见
+SPINE_SRC := $(shell find $(SPINE_DIR)/src/spine -name "*.cpp" ! -name "Extension.cpp")
 
 # ==========================================
 # 3. 编译 Mod 主模块
@@ -25,7 +26,6 @@ SPINE_SRC := $(wildcard $(SPINE_DIR)/src/spine/*.cpp)
 include $(CLEAR_VARS)
 LOCAL_MODULE    := Mod
 
-# 注意这里：把 -std=c++17 改成了 -std=c++1z (老版本 NDK 的 17 标准写法)
 LOCAL_CFLAGS := -w -Wno-error=format-security -fvisibility=hidden -fpermissive 
 LOCAL_CPPFLAGS := -w -Wno-error=format-security -fvisibility=hidden -Werror -std=c++1z 
 LOCAL_CPPFLAGS += -Wno-error=c++11-narrowing -fpermissive -Wall
@@ -35,7 +35,6 @@ LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv2 -lGLESv3
 LOCAL_SHARED_LIBRARIES := mcpe fmod
 LOCAL_STATIC_LIBRARIES  := android_native_app_glue
 
-# 保持开启 RTTI 和 异常
 LOCAL_CPP_FEATURES      := rtti exceptions
 LOCAL_ARM_MODE := arm
 
@@ -69,7 +68,6 @@ LOCAL_SRC_FILES := main.cpp \
 
 LOCAL_SRC_FILES += $(SPINE_SRC)
 
-# 包含头文件路径
 LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/mcpe \
                     $(LOCAL_PATH)/ImGui \
